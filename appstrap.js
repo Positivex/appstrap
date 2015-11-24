@@ -148,6 +148,56 @@
 		}, fail)
 	}
 
+	function createOrGetStorage(callback) {
+		try {
+			console.log('INITING FILE STORAGE');
+			window.resolveLocalFileSystemURL(cordova.file.dataDirectory + 'storage.json',
+				function(fileEntry) {
+					console.log('FILE ENTRY FOUND, reading file');
+					fileEntry.file(function(file) {
+						var reader = new FileReader();
+
+						reader.onloadend = function(e) {
+							window.storage =  JSON.parse(e.target.result);
+							callback();
+						}
+
+						reader.readAsText(file);
+					})
+				}, function(err) {
+					console.log('FILE ENTRY NOT FOUND, creating file');
+					window.resolveLocalFileSystemURL(cordova.file.dataDirectory, function(fileSystem) {
+						console.log('BEFORE GET FILE', 'storage.json', {create: true, exclusive: true})
+						fileSystem.getFile('storage.json', {create: true, exclusive: true}, function(fileEntry) {
+							console.log('FILE ENTRY CREATED', fileEntry);
+							fileEntry.createWriter(function(writer) {
+								writer.onwriteend = function(evt) {
+									fileEntry.file(function(file) {
+										console.log('FILE resolved 2', file);
+										var reader = new FileReader();
+
+										reader.onloadend = function(e) {
+											window.storage =  JSON.parse(e.target.result);
+											callback();
+										}
+
+										reader.readAsText(file);
+									})
+								};
+								writer.write(JSON.stringify({}));
+							});
+						}, function(error) {
+							console.log('Error while creating file', error);
+						});
+					}, function(err) {
+						console.log('Error while requesting file system file', err);
+					});
+				});
+		} catch(e) {
+			console.log('Error while writing file 3', e);
+		}
+	}
+
 	var deviceready = false;
 	
 	//check for device ready as it could already have been fired before all assets are available
@@ -228,17 +278,21 @@
 			
 			loadAsset(d, updateService.baseUrl, function(entry) {
 				if (dependencies.length === 0) {
-					setTimeout(function() {
-						//angular.element(document).ready(function () {
-					    if (success) success(pack);
-					    console.log('app ready for boot');
-					    document.dispatchEvent(new Event('appstrapready'))
 
-					    setTimeout(function() {
-					    	if (deviceready) window.dispatchEvent(new Event('deviceready'));
-					    }, 0)
-						//})
-					}, 0);
+					//Create fileStorage
+					createOrGetStorage(function() {
+						setTimeout(function() {
+							//angular.element(document).ready(function () {
+						    if (success) success(pack);
+						    console.log('app ready for boot');
+						    document.dispatchEvent(new Event('appstrapready'))
+
+						    setTimeout(function() {
+						    	if (deviceready) window.dispatchEvent(new Event('deviceready'));
+						    }, 0)
+							//})
+						}, 0);
+					});
 				} else {
 					loadOne();
 				}
