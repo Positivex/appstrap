@@ -150,6 +150,7 @@
 
 	/* Create fileStorage if it doesn't exist */
 	function createOrGetStorage(callback) {
+		console.log('Create or get file storage')
 		try {
 			readFile('storage.json', function() {
 				window.storage =  JSON.parse(e.target.result);
@@ -267,6 +268,7 @@
 
 					//Create fileStorage
 					createOrGetStorage(function() {
+						console.log('File storage successfully created')
 						setTimeout(function() {
 						    if (success) success(pack);
 						    console.log('app ready for boot');
