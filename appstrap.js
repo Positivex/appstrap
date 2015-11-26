@@ -152,8 +152,8 @@
 	function createOrGetStorage(callback) {
 		console.log('Create or get file storage')
 		try {
-			readFile('storage.json', function() {
-				window.storage =  JSON.parse(e.target.result);
+			readFile('storage.json', function(res) {
+				window.storage =  JSON.parse(res);
 				callback();
 			}, function(err) {
 				window.resolveLocalFileSystemURL(cordova.file.dataDirectory, function(fileSystem) {
